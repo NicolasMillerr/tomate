@@ -1,5 +1,5 @@
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use std::io;
+use std::{io, time::Duration};
 
 use ratatui::{
     DefaultTerminal, Frame,
@@ -13,8 +13,8 @@ use ratatui::{
 
 #[derive(Debug, Default)]
 pub struct App {
-    minutes: u8,
     exit: bool,
+    timer: timer::Timer,
 }
 
 pub mod timer;
@@ -22,8 +22,6 @@ pub mod timer;
 impl App {
     // This is the lifetime manager for the application
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
-        // let mut timer = timer::Timer::new();
-
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;
@@ -36,54 +34,67 @@ impl App {
     }
 
     fn handle_events(&mut self) -> io::Result<()> {
-        match event::read()? {
-            Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                self.handle_key_event(key_event);
-            }
-            _ => {}
-        };
+        if event::poll(Duration::from_millis(100))? {
+            match event::read()? {
+                Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                    self.handle_key_event(key_event);
+                }
+                _ => {}
+            };
+        }
         Ok(())
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
-            KeyCode::Left => self.decrement_counter(),
-            KeyCode::Right => self.increment_counter(),
+            KeyCode::Char('w') => self.timer.handle_input(timer::TimerEvent::StartWork),
+            KeyCode::Char('b') => self.timer.handle_input(timer::TimerEvent::StartBreak),
+            KeyCode::Char('p') => self.timer.handle_input(timer::TimerEvent::Pause),
+            KeyCode::Char('r') => self.timer.handle_input(timer::TimerEvent::Resume),
+            KeyCode::Char('x') => self.timer.handle_input(timer::TimerEvent::Reset),
             _ => {}
         }
+    }
+    fn format_duration(duration: Duration) -> String {
+        let total_seconds = duration.as_secs();
+        let minutes = total_seconds / 60;
+        let seconds = total_seconds % 60;
+
+        format!("{:02}:{:02}", minutes, seconds)
     }
 
     fn exit(&mut self) {
         self.exit = true;
     }
-    fn increment_counter(&mut self) {
-        self.minutes = self.minutes.wrapping_add(1);
-    }
-    fn decrement_counter(&mut self) {
-        self.minutes = self.minutes.wrapping_sub(1);
-    }
 }
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let title = Line::from(" Counter App Tutorial ".bold());
+        let title = Line::from(" Tomate ".red().bold());
         let instructions = Line::from(vec![
-            " Decrement ".into(),
-            "<Left>".blue().bold(),
-            " Increment ".into(),
-            "<Right>".blue().bold(),
-            " Quit ".into(),
-            "<Q> ".blue().bold(),
+            " Start Work: ".into(),
+            "<w>".blue().bold(),
+            " Start Break: ".into(),
+            "<b>".blue().bold(),
+            " Pause: ".into(),
+            "<p>".blue().bold(),
+            " Resume: ".into(),
+            "<r>".blue().bold(),
+            " Reset: ".into(),
+            "<x>".blue().bold(),
+            " Quit: ".into(),
+            "<q> ".blue().bold(),
         ]);
         let block = Block::bordered()
             .title(title.centered())
             .title_bottom(instructions.centered())
             .border_set(border::THICK);
 
+        let remaining_time = self.timer.get_remaining_time();
         let counter_text = Text::from(vec![Line::from(vec![
-            "Value: ".into(),
-            self.minutes.to_string().yellow(),
+            "Remaining: ".into(),
+            App::format_duration(remaining_time).into(),
         ])]);
 
         Paragraph::new(counter_text)
@@ -98,50 +109,4 @@ fn main() -> io::Result<()> {
     let app_result = App::default().run(&mut terminal);
     ratatui::restore();
     app_result
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ratatui::style::Style;
-
-    #[test]
-    fn render() {
-        let app = App::default();
-        let mut buf = Buffer::empty(Rect::new(0, 0, 50, 4));
-
-        app.render(buf.area, &mut buf);
-
-        let mut expected = Buffer::with_lines(vec![
-            "┏━━━━━━━━━━━━━ Counter App Tutorial ━━━━━━━━━━━━━┓",
-            "┃                    Value: 0                    ┃",
-            "┃                                                ┃",
-            "┗━ Decrement <Left> Increment <Right> Quit <Q> ━━┛",
-        ]);
-        let title_style = Style::new().bold();
-        let counter_style = Style::new().yellow();
-        let key_style = Style::new().blue().bold();
-        expected.set_style(Rect::new(14, 0, 22, 1), title_style);
-        expected.set_style(Rect::new(28, 1, 1, 1), counter_style);
-        expected.set_style(Rect::new(13, 3, 6, 1), key_style);
-        expected.set_style(Rect::new(30, 3, 7, 1), key_style);
-        expected.set_style(Rect::new(43, 3, 4, 1), key_style);
-
-        assert_eq!(buf, expected);
-    }
-
-    #[test]
-    fn handle_key_event() -> io::Result<()> {
-        let mut app = App::default();
-        app.handle_key_event(KeyCode::Right.into());
-        assert_eq!(app.minutes, 1);
-
-        app.handle_key_event(KeyCode::Left.into());
-        assert_eq!(app.minutes, 0);
-
-        let mut app = App::default();
-        app.handle_key_event(KeyCode::Char('q').into());
-        assert!(app.exit);
-        Ok(())
-    }
 }

@@ -57,7 +57,20 @@ impl Timer {
             (_, _) => {}
         }
     }
-    pub fn get_remaining_time(&mut self) -> Duration {
+    pub fn get_remaining_time(&self) -> Duration {
+        match self.current_state {
+            TimerState::Running => {
+                let elapsed = self.start_time.unwrap().elapsed();
+                let remaining = self.target_duration.saturating_sub(elapsed);
+                remaining
+            }
+            TimerState::Paused => self.target_duration,
+            TimerState::Completed => Duration::ZERO,
+            TimerState::Idle => Duration::ZERO,
+        }
+    }
+
+    pub fn update(&mut self) {
         match self.current_state {
             TimerState::Running => {
                 let elapsed = self.start_time.unwrap().elapsed();
@@ -65,11 +78,8 @@ impl Timer {
                 if remaining == Duration::ZERO {
                     self.current_state = TimerState::Completed;
                 }
-                remaining
             }
-            TimerState::Paused => self.target_duration,
-            TimerState::Completed => Duration::ZERO,
-            TimerState::Idle => Duration::ZERO,
+            _ => {}
         }
     }
 
@@ -180,5 +190,18 @@ mod tests {
         thread::sleep(Duration::from_millis(50)); // Wait a bit more
         let time_after_pause = timer.get_remaining_time();
         assert!(time_after_pause == remaining_at_pause);
+    }
+    #[test]
+    fn start_work_while_working() {
+        let mut timer = Timer::new();
+        timer.handle_input(TimerEvent::StartWork);
+        thread::sleep(Duration::from_millis(50)); // Wait a bit
+
+        timer.handle_input(TimerEvent::StartWork);
+        let remaining_at_start = timer.get_remaining_time();
+
+        thread::sleep(Duration::from_millis(50)); // Wait a bit more
+        let time_after_start = timer.get_remaining_time();
+        assert!(time_after_start < remaining_at_start);
     }
 }
