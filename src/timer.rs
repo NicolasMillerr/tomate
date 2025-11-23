@@ -5,7 +5,7 @@ const BREAK_DURATION: u64 = 5 * 60;
 
 #[derive(Debug, Default)]
 pub struct Timer {
-    pub current_state: TimerState,
+    current_state: TimerState,
     start_time: Option<std::time::Instant>,
     target_duration: Duration,
 }
@@ -29,6 +29,10 @@ pub enum TimerEvent {
 }
 
 impl Timer {
+    pub fn state(&self) -> TimerState {
+        self.current_state
+    }
+
     pub fn handle_input(&mut self, input: TimerEvent) {
         match (self.current_state, input) {
             (TimerState::Idle, TimerEvent::StartWork) => {

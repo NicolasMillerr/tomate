@@ -79,7 +79,7 @@ impl App {
     }
 
     fn relevant_instructions<'a>(&self) -> Line<'a> {
-        match self.timer.current_state {
+        match self.timer.state() {
             timer::TimerState::Idle => Line::from(vec![
                 " Start Work:".into(),
                 "<w>".blue().bold(),
