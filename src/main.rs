@@ -11,13 +11,14 @@ use ratatui::{
     widgets::{Block, Paragraph, Widget},
 };
 
+mod timer;
+use timer::{Timer, TimerEvent};
+
 #[derive(Debug, Default)]
 pub struct App {
     exit: bool,
-    timer: timer::Timer,
+    timer: Timer,
 }
-
-pub mod timer;
 
 impl App {
     // This is the lifetime manager for the application
@@ -25,6 +26,7 @@ impl App {
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;
+            self.timer.update();
         }
         Ok(())
     }
@@ -48,11 +50,11 @@ impl App {
     fn handle_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
-            KeyCode::Char('w') => self.timer.handle_input(timer::TimerEvent::StartWork),
-            KeyCode::Char('b') => self.timer.handle_input(timer::TimerEvent::StartBreak),
-            KeyCode::Char('p') => self.timer.handle_input(timer::TimerEvent::Pause),
-            KeyCode::Char('r') => self.timer.handle_input(timer::TimerEvent::Resume),
-            KeyCode::Char('x') => self.timer.handle_input(timer::TimerEvent::Reset),
+            KeyCode::Char('w') => self.timer.handle_input(TimerEvent::StartWork),
+            KeyCode::Char('b') => self.timer.handle_input(TimerEvent::StartBreak),
+            KeyCode::Char('p') => self.timer.handle_input(TimerEvent::Pause),
+            KeyCode::Char('r') => self.timer.handle_input(TimerEvent::Resume),
+            KeyCode::Char('x') => self.timer.handle_input(TimerEvent::Reset),
             _ => {}
         }
     }

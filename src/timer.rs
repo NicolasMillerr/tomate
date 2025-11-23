@@ -26,14 +26,6 @@ pub enum TimerEvent {
 }
 
 impl Timer {
-    pub fn new() -> Self {
-        Self {
-            current_state: TimerState::Idle,
-            start_time: None,
-            target_duration: Duration::ZERO,
-        }
-    }
-
     pub fn handle_input(&mut self, input: TimerEvent) {
         match (self.current_state, input) {
             (TimerState::Idle, TimerEvent::StartWork) => {
@@ -123,7 +115,7 @@ mod tests {
     #[test]
     fn test_timer_starts_work_with_25_minutes() {
         // Arrange
-        let mut timer = Timer::new(); // You'll need to add a new() method!
+        let mut timer = Timer::default();
 
         // Act
         timer.handle_input(TimerEvent::StartWork);
@@ -136,7 +128,7 @@ mod tests {
 
     #[test]
     fn test_timer_starts_break_with_5_minutes() {
-        let mut timer = Timer::new();
+        let mut timer = Timer::default();
 
         timer.handle_input(TimerEvent::StartBreak);
 
@@ -147,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_timer_counts_down() {
-        let mut timer = Timer::new();
+        let mut timer = Timer::default();
         timer.handle_input(TimerEvent::StartWork);
 
         let initial = timer.get_remaining_time();
@@ -159,7 +151,7 @@ mod tests {
 
     #[test]
     fn test_timer_pauses_after_pausing() {
-        let mut timer = Timer::new();
+        let mut timer = Timer::default();
         timer.handle_input(TimerEvent::StartWork);
         timer.handle_input(TimerEvent::Pause);
         assert!(matches!(timer.current_state, TimerState::Paused));
@@ -167,7 +159,7 @@ mod tests {
 
     #[test]
     fn test_timer_resumes_after_resuming() {
-        let mut timer = Timer::new();
+        let mut timer = Timer::default();
         timer.handle_input(TimerEvent::StartWork);
         timer.handle_input(TimerEvent::Pause);
         let initial_start_time = timer.start_time;
@@ -180,7 +172,7 @@ mod tests {
 
     #[test]
     fn pause_stops_time() {
-        let mut timer = Timer::new();
+        let mut timer = Timer::default();
         timer.handle_input(TimerEvent::StartWork);
         thread::sleep(Duration::from_millis(50)); // Wait a bit
 
@@ -193,7 +185,7 @@ mod tests {
     }
     #[test]
     fn start_work_while_working() {
-        let mut timer = Timer::new();
+        let mut timer = Timer::default();
         timer.handle_input(TimerEvent::StartWork);
         thread::sleep(Duration::from_millis(50)); // Wait a bit
 
