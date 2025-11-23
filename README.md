@@ -22,3 +22,8 @@ logo or similar with big block letters.
 you can start the timer with w or b
 3. Somehow notify the user when the timer expires. Play a sound or flash the terminal window.
 4. Rather than using a single stroke of x to reset the timer, use a double stroke of x to reset the timer.
+
+
+Ideas:
+- Create a tool for drawing big letter asci art chars
+  - Could use ai? Cooler to use something more old school
