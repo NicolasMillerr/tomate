@@ -1,5 +1,5 @@
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use std::{io, time::Duration, vec::Drain};
+use std::{io, time::Duration};
 
 use ratatui::{
     DefaultTerminal, Frame,
@@ -14,7 +14,6 @@ use ratatui::{
 mod timer;
 mod visuals;
 use timer::{Timer, TimerEvent};
-use visuals::{EIGHT, ONE};
 
 use crate::visuals::draw_time;
 
@@ -25,7 +24,6 @@ pub struct App {
 }
 
 impl App {
-    // This is the lifetime manager for the application
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
@@ -62,7 +60,7 @@ impl App {
             _ => {}
         }
     }
-    fn format_duration<'a>(duration: Duration) -> Vec<Line<'a>> {
+    fn render_duration_as_lines<'a>(duration: Duration) -> Vec<Line<'a>> {
         let total_seconds = duration.as_secs();
         let minutes = total_seconds / 60;
         let seconds = total_seconds % 60;
@@ -72,31 +70,52 @@ impl App {
         let second_tens = seconds / 10;
         let second_ones = seconds % 10;
 
-        return draw_time(minute_tens, minute_ones, second_tens, second_ones);
+        let time_lines = draw_time(minute_tens, minute_ones, second_tens, second_ones);
+        time_lines
     }
 
     fn exit(&mut self) {
         self.exit = true;
+    }
+
+    fn relevant_instructions<'a>(&self) -> Line<'a> {
+        match self.timer.current_state {
+            timer::TimerState::Idle => Line::from(vec![
+                " Start Work:".into(),
+                "<w>".blue().bold(),
+                " Start Break:".into(),
+                "<b>".blue().bold(),
+                " Exit:".into(),
+                "<q>".blue().bold(),
+            ]),
+            timer::TimerState::Running => Line::from(vec![
+                " Pause:".into(),
+                "<p>".blue().bold(),
+                " Exit:".into(),
+                "<q>".blue().bold(),
+            ]),
+            timer::TimerState::Paused => Line::from(vec![
+                " Resume:".into(),
+                "<r>".blue().bold(),
+                " Reset:".into(),
+                "<x>".blue().bold(),
+                " Exit:".into(),
+                "<q>".blue().bold(),
+            ]),
+            timer::TimerState::Completed => Line::from(vec![
+                " Reset:".into(),
+                "<x>".blue().bold(),
+                " Exit:".into(),
+                "<q>".blue().bold(),
+            ]),
+        }
     }
 }
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Tomate ".red().bold());
-        let instructions = Line::from(vec![
-            " Start Work: ".into(),
-            "<w>".blue().bold(),
-            " Start Break: ".into(),
-            "<b>".blue().bold(),
-            " Pause: ".into(),
-            "<p>".blue().bold(),
-            " Resume: ".into(),
-            "<r>".blue().bold(),
-            " Reset: ".into(),
-            "<x>".blue().bold(),
-            " Quit: ".into(),
-            "<q> ".blue().bold(),
-        ]);
+        let instructions = self.relevant_instructions();
         let block = Block::bordered()
             .title(title.centered())
             .title_bottom(instructions.centered())
@@ -104,7 +123,7 @@ impl Widget for &App {
 
         let remaining_time = self.timer.get_remaining_time();
 
-        let time = App::format_duration(remaining_time);
+        let time = App::render_duration_as_lines(remaining_time);
 
         Paragraph::new(time)
             .centered()

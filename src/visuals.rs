@@ -3,7 +3,7 @@ use ratatui::text::Line;
 const ROWS: usize = 5;
 
 #[rustfmt::skip]
-pub const SEMICOLON: &[&str] = &[
+pub const COLON: &[&str] = &[
     "   ",
     " █ ",
     "   ",
@@ -110,7 +110,7 @@ pub fn draw_time<'a>(m1: u64, m2: u64, s1: u64, s2: u64) -> Vec<Line<'a>> {
             "{} {} {} {} {}",
             NUMBER_MAP[m1 as usize][i],
             NUMBER_MAP[m2 as usize][i],
-            SEMICOLON[i],
+            COLON[i],
             NUMBER_MAP[s1 as usize][i],
             NUMBER_MAP[s2 as usize][i]
         )));

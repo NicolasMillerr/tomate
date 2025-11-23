@@ -1,14 +1,17 @@
 use std::time::Duration;
 
+const WORK_DURATION: u64 = 25 * 60;
+const BREAK_DURATION: u64 = 5 * 60;
+
 #[derive(Debug, Default)]
 pub struct Timer {
-    current_state: TimerState,
+    pub current_state: TimerState,
     start_time: Option<std::time::Instant>,
     target_duration: Duration,
 }
 
 #[derive(Copy, Clone, Debug, Default)]
-enum TimerState {
+pub enum TimerState {
     #[default]
     Idle,
     Running,
@@ -83,19 +86,19 @@ impl Timer {
 
     fn reset(&mut self) {
         self.current_state = TimerState::Idle;
-        self.target_duration = Duration::from_secs(25 * 60);
+        self.target_duration = Duration::from_secs(WORK_DURATION);
     }
 
     fn start_work(&mut self) {
         self.current_state = TimerState::Running;
         self.start_time = Some(std::time::Instant::now());
-        self.target_duration = Duration::from_secs(25 * 60);
+        self.target_duration = Duration::from_secs(WORK_DURATION);
     }
 
     fn start_break(&mut self) {
         self.current_state = TimerState::Running;
         self.start_time = Some(std::time::Instant::now());
-        self.target_duration = Duration::from_secs(5 * 60);
+        self.target_duration = Duration::from_secs(BREAK_DURATION);
     }
 
     fn pause(&mut self) {
@@ -131,7 +134,7 @@ mod tests {
         // Assert
         let remaining = timer.get_remaining_time();
         assert!(remaining > Duration::from_secs(24 * 60 + 59)); // At least 24:59
-        assert!(remaining <= Duration::from_secs(25 * 60)); // At most 25:00
+        assert!(remaining <= Duration::from_secs(WORK_DURATION)); // At most 25:00
     }
 
     #[test]
@@ -142,7 +145,7 @@ mod tests {
 
         let remaining = timer.get_remaining_time();
         assert!(remaining > Duration::from_secs(4 * 60 + 59));
-        assert!(remaining <= Duration::from_secs(5 * 60));
+        assert!(remaining <= Duration::from_secs(BREAK_DURATION));
     }
 
     #[test]

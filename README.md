@@ -16,13 +16,8 @@ You do this by using specified keystrokes:
 - Press 'x' to reset the timer
 
 Roadmap:
-1. Rather than displaying the remaining time as a small number, format it as a 
-logo or similar with big block letters.
-2. When timer isn't running, Rather than displaying the time, display a message indicating
-you can start the timer with w or b
-3. Somehow notify the user when the timer expires. Play a sound or flash the terminal window.
-4. Rather than using a single stroke of x to reset the timer, use a double stroke of x to reset the timer.
-
+1. Somehow notify the user when the timer expires. Play a sound or flash the terminal window.
+1. Probably refactor main.rs to get the app code out of there.
 
 Ideas:
 - Create a tool for drawing big letter asci art chars
