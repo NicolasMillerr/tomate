@@ -52,7 +52,10 @@ impl Timer {
     pub fn get_remaining_time(&self) -> Duration {
         match self.current_state {
             TimerState::Running => {
-                let elapsed = self.start_time.unwrap().elapsed();
+                let elapsed = self
+                    .start_time
+                    .expect("Running timer must have a start time")
+                    .elapsed();
                 let remaining = self.target_duration.saturating_sub(elapsed);
                 remaining
             }
@@ -65,7 +68,10 @@ impl Timer {
     pub fn update(&mut self) {
         match self.current_state {
             TimerState::Running => {
-                let elapsed = self.start_time.unwrap().elapsed();
+                let elapsed = self
+                    .start_time
+                    .expect("Running timer must have a start time")
+                    .elapsed();
                 let remaining = self.target_duration.saturating_sub(elapsed);
                 if remaining == Duration::ZERO {
                     self.current_state = TimerState::Completed;
@@ -94,9 +100,11 @@ impl Timer {
 
     fn pause(&mut self) {
         self.current_state = TimerState::Paused;
-        self.target_duration = self
-            .target_duration
-            .saturating_sub(self.start_time.unwrap().elapsed());
+        self.target_duration = self.target_duration.saturating_sub(
+            self.start_time
+                .expect("Pause function is only called when timer is running")
+                .elapsed(),
+        );
         self.start_time = None;
     }
 

@@ -1,5 +1,5 @@
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use std::{io, time::Duration};
+use std::{io, time::Duration, vec::Drain};
 
 use ratatui::{
     DefaultTerminal, Frame,
@@ -7,12 +7,16 @@ use ratatui::{
     layout::Rect,
     style::Stylize,
     symbols::border,
-    text::{Line, Text},
+    text::Line,
     widgets::{Block, Paragraph, Widget},
 };
 
 mod timer;
+mod visuals;
 use timer::{Timer, TimerEvent};
+use visuals::{EIGHT, ONE};
+
+use crate::visuals::draw_time;
 
 #[derive(Debug, Default)]
 pub struct App {
@@ -58,12 +62,17 @@ impl App {
             _ => {}
         }
     }
-    fn format_duration(duration: Duration) -> String {
+    fn format_duration<'a>(duration: Duration) -> Vec<Line<'a>> {
         let total_seconds = duration.as_secs();
         let minutes = total_seconds / 60;
         let seconds = total_seconds % 60;
 
-        format!("{:02}:{:02}", minutes, seconds)
+        let minute_tens = minutes / 10;
+        let minute_ones = minutes % 10;
+        let second_tens = seconds / 10;
+        let second_ones = seconds % 10;
+
+        return draw_time(minute_tens, minute_ones, second_tens, second_ones);
     }
 
     fn exit(&mut self) {
@@ -94,12 +103,10 @@ impl Widget for &App {
             .border_set(border::THICK);
 
         let remaining_time = self.timer.get_remaining_time();
-        let counter_text = Text::from(vec![Line::from(vec![
-            "Remaining: ".into(),
-            App::format_duration(remaining_time).into(),
-        ])]);
 
-        Paragraph::new(counter_text)
+        let time = App::format_duration(remaining_time);
+
+        Paragraph::new(time)
             .centered()
             .block(block)
             .render(area, buf);
