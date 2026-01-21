@@ -82,6 +82,10 @@ impl Timer {
                 let remaining = self.target_duration.saturating_sub(elapsed);
                 if remaining == Duration::ZERO {
                     self.current_state = TimerState::Completed;
+                    // Play system sound (macOS)
+                    let _ = std::process::Command::new("afplay")
+                        .arg("/System/Library/Sounds/Glass.aiff")
+                        .spawn();
                 }
             }
             _ => {}

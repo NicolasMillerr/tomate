@@ -14,8 +14,7 @@ use ratatui::{
 mod timer;
 mod visuals;
 use timer::{Timer, TimerEvent};
-
-use crate::visuals::draw_time;
+use visuals::draw_time;
 
 #[derive(Debug, Default)]
 pub struct App {
