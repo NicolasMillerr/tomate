@@ -15,6 +15,10 @@ You do this by using specified keystrokes:
 - Press 'r' to resume the timer
 - Press 'x' to reset the timer
 
+# Installation
+
+Simply run `cargo install --path .` from inside the repository.
+
 Roadmap:
 1. Somehow notify the user when the timer expires. Play a sound or flash the terminal window.
 1. Probably refactor main.rs to get the app code out of there.
